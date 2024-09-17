@@ -70,14 +70,17 @@ def main():
             i = i + 1
     
     # Print all lines that were found
+    print("Found String")
     [print(line) for line in found_list]
-    print('--------------------------------')
+    print('---------- End of Found String ----------------')
 
     # Print all lines that were not found
+    print("Not Found String")
     [print(line) for line in not_found_list]
-    print('--------------------------------')
+    print('---------- End of Not Found String ----------------')
 
     # Print the result dictionary containing all lines and their status
+    print("String As Dict")
     [print(line) for line in result_dict]
         
 def read_file_to_lines(file_name, folder_path = ''):
