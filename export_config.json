@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "project_name": {
+      "fetch_path": "/path/to/project_folder",
+      "root_dir_name": "root_folder_name",
+      "exclude_dirs_list": [],
+      "exclude_files_list": [],
+      "include_files_extensions": [],
+      "output_file_name": "output_file_name",
+      "output_file_path": "output_file_path"
+    }
+  }
+}

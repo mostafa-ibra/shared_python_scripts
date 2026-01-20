@@ -1,27 +1,57 @@
 import os
+import json
+import argparse
 from typing import List, Any
 
+def load_project_config(config_path: str, project_name: str) -> dict:
+    with open(config_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    projects = data.get("projects", {})
+    if project_name not in projects:
+        available = ", ".join(projects.keys())
+        raise ValueError(f"Unknown project '{project_name}'. Available: {available}")
+
+    cfg = projects[project_name]
+
+    # small defaults so config can be minimal
+    cfg.setdefault("exclude_dirs_list", [])
+    cfg.setdefault("exclude_files_list", [])
+    cfg.setdefault("include_files_extensions", [])
+    cfg.setdefault("output_file_name", "export_output")
+    cfg.setdefault("output_file_path", "")
+
+    return cfg
+
 def main():
-    fetch_path = r'D:\Programming\parent_project'
-    root_dir_name = 'src'
-    exclude_dirs_list = ['node_modules', 'coverage', '.git']
-    exclude_files_list = [
-        'jest.config.ts',
-        'vite.config.ts',
-        'vite-env.d.ts'
-    ]
-    include_files_extensions = ['tsx', 'ts']
-    output_file_name = 'outut_to_chatgpt'
-    output_file_path = ''
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", default="export_config.json")
+    parser.add_argument("--project", required=True)
+    args = parser.parse_args()
+
+    cfg = load_project_config(args.config, args.project)
+
+    fetch_path = cfg["fetch_path"]
+    root_dir_name = cfg["root_dir_name"]
+    exclude_dirs_list = cfg["exclude_dirs_list"]
+    exclude_files_list = cfg["exclude_files_list"]
+    include_files_extensions = cfg["include_files_extensions"]
+    output_file_name = cfg["output_file_name"]
+    output_file_path = cfg["output_file_path"]
 
     # read files from folder
     files = list_files_with_extensions(fetch_path, exclude_dirs_list, exclude_files_list, include_files_extensions )
+    # [print(file) for file in files]
+    # exit()
     chunk_files = split_list_into_chunks(files, 7)
     for ind, files in enumerate(chunk_files):
-        current_output_file = output_file_name + f"_{ind}.log"
+        # current_output_file = output_file_name + f"_{ind}.log"
+        current_output_file = output_file_name + f"_file.log"
         for file in files:
             folder = get_folder_path_from_root(file, root_dir_name)
             file_name = os.path.basename(file)
+            print(f"Processing: {os.path.join(folder, file_name)}")
             lines = read_file_to_lines(file)
             # lines = remove_empty_lines(lines)
             write_to_file_from_str("========================================================", current_output_file, output_file_path)
@@ -152,7 +182,7 @@ def read_file_to_lines(file_name, folder_path=None):
     
     try:
         # Using 'with' ensures the file is properly closed after reading
-        with open(file_path, "r") as file_obj:
+        with open(file_path, "r", errors='ignore') as file_obj:
             lines = file_obj.readlines()  # Read all lines from the file into a list
         return lines
     except FileNotFoundError:
