@@ -39,6 +39,7 @@ def main():
     include_files_extensions = cfg["include_files_extensions"]
     output_file_name = cfg["output_file_name"]
     output_file_path = cfg["output_file_path"]
+    output_version = cfg["version"]
 
     # read files from folder
     files = list_files_with_extensions(fetch_path, exclude_dirs_list, exclude_files_list, include_files_extensions )
@@ -47,7 +48,7 @@ def main():
     chunk_files = split_list_into_chunks(files, 7)
     for ind, files in enumerate(chunk_files):
         # current_output_file = output_file_name + f"_{ind}.log"
-        current_output_file = output_file_name + f"_file.log"
+        current_output_file = f"{output_file_name}_{output_version}_file.log"
         for file in files:
             folder = get_folder_path_from_root(file, root_dir_name)
             file_name = os.path.basename(file)
@@ -90,48 +91,29 @@ def list_files_with_extensions(folder_path, exclude_dirs_list=[], exclude_files_
     
     return filtered_files
 
-def list_files_excluding_extensions(folder_path, exclude_dirs_list=[], exclude_files_list=[], exclude_files_extensions=[]):
+def split_list_into_chunks(input_list: List[Any], chunk_size: int = 4) -> List[List[Any]]:
     """
-    Lists files from a directory and its subdirectories, excluding specified file extensions.
+    Splits a list into smaller chunks of a specified size.
     
-    :param folder_path: The root directory to search for files.
-    :param exclude_dirs_list: A list of directory names to exclude from the search.
-    :param exclude_files_list: A list of specific file names to exclude from the search.
-    :param exclude_files_extensions: A list of file extensions to exclude (e.g., ['.ts', '.tsx']).
-    :return: A list of filtered files with full paths.
+    :param input_list: The list to be split into chunks.
+    :param chunk_size: The size of each chunk. Defaults to 4.
+    :return: A list of lists, where each inner list is a chunk of the original list.
+    
+    Example:
+    --------
+    split_list_into_chunks([1, 2, 3, 4, 5, 6, 7], chunk_size=3)
+    -> [[1, 2, 3], [4, 5, 6], [7]]
     """
-    filtered_files = []
+    # Validate that input_list is indeed a list
+    if not isinstance(input_list, list):
+        raise ValueError("input_list must be a list.")
     
-    for path, subdirs, files in os.walk(folder_path):
-        # Exclude directories specified in exclude_dirs_list
-        subdirs[:] = [d for d in subdirs if d not in exclude_dirs_list]  # Modify subdirs in place
+    # Validate that chunk_size is a positive integer
+    if not isinstance(chunk_size, int) or chunk_size <= 0:
+        raise ValueError("chunk_size must be a positive integer.")
 
-        # Filter files based on the exclude_files_extensions and exclude_files_list
-        for file in files:
-            file_path = os.path.join(path, file)
-
-            # Skip if the file is in the exclude_files_list
-            if file in exclude_files_list:
-                continue
-
-            # Skip files with the specified extensions to exclude
-            if exclude_files_extensions and any(file.endswith(ext) for ext in exclude_files_extensions):
-                continue
-
-            filtered_files.append(file_path)
-    
-    return filtered_files
-
-def get_parent_folder_name(file_path):
-    """
-    Get the parent folder name from the complete file path.
-    
-    :param file_path: Full file path.
-    :return: Name of the parent folder.
-    """
-    parent_dir = os.path.dirname(file_path)  # Get the parent directory
-    parent_folder_name = os.path.basename(parent_dir)  # Get the last part (folder name)
-    return parent_folder_name
+    # Using list comprehension to break the input_list into chunks of size chunk_size
+    return [input_list[i:i + chunk_size] for i in range(0, len(input_list), chunk_size)]
 
 def get_folder_path_from_root(file_path, root_dir_name = "src"):
     """
@@ -192,21 +174,6 @@ def read_file_to_lines(file_name, folder_path=None):
         print(f"Error reading file '{file_name}': {e}")
         return []
 
-def remove_empty_lines(lines):
-    """
-    Remove empty lines from a list of lines.
-    
-    :param lines: A list of lines (strings), possibly containing empty lines or lines with only whitespace.
-    :return: A new list with all empty lines removed. A line is considered 'empty' if it contains only whitespace characters.
-    """
-    # Ensure the input is a list, return an empty list if it's not
-    if not isinstance(lines, list):
-        print("Warning: Input is not a list. Returning an empty list.")
-        return []
-
-    # List comprehension that filters out lines that are empty or contain only whitespace
-    return [line for line in lines if line.strip()]
-
 def write_to_file_from_str(var_str, file_name, file_path=None):
     """
     Write a string to a file.
@@ -262,28 +229,64 @@ def write_to_file_from_list(lst, file_name, file_path=None):
         # Handle potential I/O errors during file writing
         print(f"Error writing to file '{full_path}': {e}")
 
-def split_list_into_chunks(input_list: List[Any], chunk_size: int = 4) -> List[List[Any]]:
-    """
-    Splits a list into smaller chunks of a specified size.
-    
-    :param input_list: The list to be split into chunks.
-    :param chunk_size: The size of each chunk. Defaults to 4.
-    :return: A list of lists, where each inner list is a chunk of the original list.
-    
-    Example:
-    --------
-    split_list_into_chunks([1, 2, 3, 4, 5, 6, 7], chunk_size=3)
-    -> [[1, 2, 3], [4, 5, 6], [7]]
-    """
-    # Validate that input_list is indeed a list
-    if not isinstance(input_list, list):
-        raise ValueError("input_list must be a list.")
-    
-    # Validate that chunk_size is a positive integer
-    if not isinstance(chunk_size, int) or chunk_size <= 0:
-        raise ValueError("chunk_size must be a positive integer.")
 
-    # Using list comprehension to break the input_list into chunks of size chunk_size
-    return [input_list[i:i + chunk_size] for i in range(0, len(input_list), chunk_size)]
+def list_files_excluding_extensions(folder_path, exclude_dirs_list=[], exclude_files_list=[], exclude_files_extensions=[]):
+    """
+    Lists files from a directory and its subdirectories, excluding specified file extensions.
+    
+    :param folder_path: The root directory to search for files.
+    :param exclude_dirs_list: A list of directory names to exclude from the search.
+    :param exclude_files_list: A list of specific file names to exclude from the search.
+    :param exclude_files_extensions: A list of file extensions to exclude (e.g., ['.ts', '.tsx']).
+    :return: A list of filtered files with full paths.
+    """
+    filtered_files = []
+    
+    for path, subdirs, files in os.walk(folder_path):
+        # Exclude directories specified in exclude_dirs_list
+        subdirs[:] = [d for d in subdirs if d not in exclude_dirs_list]  # Modify subdirs in place
+
+        # Filter files based on the exclude_files_extensions and exclude_files_list
+        for file in files:
+            file_path = os.path.join(path, file)
+
+            # Skip if the file is in the exclude_files_list
+            if file in exclude_files_list:
+                continue
+
+            # Skip files with the specified extensions to exclude
+            if exclude_files_extensions and any(file.endswith(ext) for ext in exclude_files_extensions):
+                continue
+
+            filtered_files.append(file_path)
+    
+    return filtered_files
+
+def get_parent_folder_name(file_path):
+    """
+    Get the parent folder name from the complete file path.
+    
+    :param file_path: Full file path.
+    :return: Name of the parent folder.
+    """
+    parent_dir = os.path.dirname(file_path)  # Get the parent directory
+    parent_folder_name = os.path.basename(parent_dir)  # Get the last part (folder name)
+    return parent_folder_name
+
+def remove_empty_lines(lines):
+    """
+    Remove empty lines from a list of lines.
+    
+    :param lines: A list of lines (strings), possibly containing empty lines or lines with only whitespace.
+    :return: A new list with all empty lines removed. A line is considered 'empty' if it contains only whitespace characters.
+    """
+    # Ensure the input is a list, return an empty list if it's not
+    if not isinstance(lines, list):
+        print("Warning: Input is not a list. Returning an empty list.")
+        return []
+
+    # List comprehension that filters out lines that are empty or contain only whitespace
+    return [line for line in lines if line.strip()]
+
 
 main()
