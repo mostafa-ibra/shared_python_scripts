@@ -55,8 +55,9 @@ def main():
             print(f"Processing: {os.path.join(folder, file_name)}")
             lines = read_file_to_lines(file)
             # lines = remove_empty_lines(lines)
-            write_to_file_from_str("========================================================", current_output_file, output_file_path)
+            write_to_file_from_str("\n========================================================", current_output_file, output_file_path)
             write_to_file_from_str(os.path.join(folder, file_name), current_output_file, output_file_path)
+            write_to_file_from_str("-------------------------", current_output_file, output_file_path)
             write_to_file_from_list(lines, current_output_file, output_file_path)
 
     print("Please check output file")
